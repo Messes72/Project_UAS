@@ -7,6 +7,12 @@ final fieldRepositoryProvider = Provider<FieldRepository>((ref) {
 });
 
 final myFieldsProvider = FutureProvider<List<FieldModel>>((ref) async {
+  final role =
+      Supabase.instance.client.auth.currentUser?.userMetadata?['role'] ??
+      'user';
+  if (role == 'admin') {
+    return ref.watch(fieldRepositoryProvider).getAdminFields();
+  }
   return ref.watch(fieldRepositoryProvider).getMyFields();
 });
 
@@ -15,19 +21,30 @@ class FieldRepository {
 
   FieldRepository(this._client);
 
+  Future<void> deleteField(String id) async {
+    await _client.from('fields').delete().eq('id', id);
+  }
+
   Future<List<FieldModel>> getMyFields() async {
     final response = await _client
         .from('fields')
-        .select()
+        .select('*, field_images(file_path)')
         .eq('owner_id', _client.auth.currentUser!.id);
 
+    return (response as List).map((e) => FieldModel.fromJson(e)).toList();
+  }
+
+  Future<List<FieldModel>> getAdminFields() async {
+    final response = await _client
+        .from('fields')
+        .select('*, field_images(file_path)');
     return (response as List).map((e) => FieldModel.fromJson(e)).toList();
   }
 
   Future<List<FieldModel>> getAllActiveFields() async {
     final response = await _client
         .from('fields')
-        .select()
+        .select('*, field_images(file_path)')
         .eq('is_active', true);
 
     return (response as List).map((e) => FieldModel.fromJson(e)).toList();
@@ -44,7 +61,11 @@ class FieldRepository {
     await _client.from('fields').update(updates).eq('id', id);
   }
 
-  Future<void> deleteField(String id) async {
-    await _client.from('fields').delete().eq('id', id);
+  Future<void> addFieldImage(String fieldId, String filePath) async {
+    await _client.from('field_images').insert({
+      'field_id': fieldId,
+      'file_path': filePath,
+      'caption': 'Main Image',
+    });
   }
 }

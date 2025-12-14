@@ -1,58 +1,345 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:aplikasi_sewa_lapangan/features/auth/data/auth_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_repository.dart';
+import 'package:aplikasi_sewa_lapangan/features/bookings/data/booking_repository.dart';
+import 'package:aplikasi_sewa_lapangan/features/auth/data/auth_repository.dart';
+
+// Providers
+final dashboardFieldsProvider = FutureProvider((ref) async {
+  final user = Supabase.instance.client.auth.currentUser;
+  String role = user?.userMetadata?['role'] ?? 'user';
+  if (user?.email == 'admin@gmail.com') role = 'admin';
+  if (user?.email == 'owner@gmail.com') role = 'owner';
+
+  if (role == 'admin') {
+    return ref.watch(fieldRepositoryProvider).getAdminFields();
+  } else {
+    return ref.watch(fieldRepositoryProvider).getMyFields();
+  }
+});
+
+final dashboardBookingsProvider = FutureProvider((ref) async {
+  final user = Supabase.instance.client.auth.currentUser;
+  String role = user?.userMetadata?['role'] ?? 'user';
+  if (user?.email == 'admin@gmail.com') role = 'admin';
+  if (user?.email == 'owner@gmail.com') role = 'owner';
+
+  if (role == 'admin') {
+    return ref.watch(bookingRepositoryProvider).getAdminBookings();
+  } else {
+    return ref.watch(bookingRepositoryProvider).getOwnerBookings();
+  }
+});
 
 class OwnerDashboardScreen extends ConsumerWidget {
   const OwnerDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fieldsAsync = ref.watch(myFieldsProvider);
+    final user = Supabase.instance.client.auth.currentUser;
+    String role = user?.userMetadata?['role'] ?? 'user';
+    if (user?.email == 'admin@gmail.com') role = 'admin';
+    if (user?.email == 'owner@gmail.com') role = 'owner';
+
+    final isAdmin = role == 'admin';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Fields'),
+        title: Text(isAdmin ? 'Admin Dashboard' : 'Owner Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.invalidate(dashboardFieldsProvider);
+              ref.invalidate(dashboardBookingsProvider);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authRepositoryProvider).signOut(),
           ),
         ],
       ),
-      body: fieldsAsync.when(
-        data: (fields) {
-          if (fields.isEmpty) {
-            return const Center(child: Text('No fields added yet.'));
-          }
-          return ListView.builder(
-            itemCount: fields.length,
-            itemBuilder: (context, index) {
-              final field = fields[index];
-              return ListTile(
-                title: Text(field.name),
-                subtitle: Text('Rp ${field.pricePerHour}/hour'),
-                trailing: Switch(
-                  value: field.isActive,
-                  onChanged: (val) {
-                    // TODO: Implement toggle active status
-                  },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Fields Section ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isAdmin ? 'All Fields' : 'My Fields',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                if (!isAdmin)
+                  ElevatedButton.icon(
+                    onPressed: () => context.push('/owner/add-field'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildFieldsList(ref, isAdmin),
+
+            const Divider(height: 48, thickness: 2),
+
+            // --- Bookings Section ---
+            const Text(
+              'Incoming Bookings',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildBookingsList(ref),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldsList(WidgetRef ref, bool isAdmin) {
+    final fieldsAsync = ref.watch(dashboardFieldsProvider);
+    return fieldsAsync.when(
+      data: (fields) {
+        if (fields.isEmpty) {
+          return const Text('No fields found.');
+        }
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.8,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: fields.length,
+          itemBuilder: (context, index) {
+            final field = fields[index];
+            return Card(
+              elevation: 2,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
                 onTap: () {
-                  // TODO: Navigate to detail/edit
+                  // Owner usually doesn't click to see detail like user, but maybe helpful?
                 },
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/owner/add-field'),
-        child: const Icon(Icons.add),
-      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: field.images.isNotEmpty
+                          ? Image.network(
+                              field.images.first.startsWith('http')
+                                  ? field.images.first
+                                  : Supabase.instance.client.storage
+                                        .from('field-images')
+                                        .getPublicUrl(field.images.first),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: Colors.grey.shade200,
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: Colors.grey.shade200,
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.sports_soccer,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            field.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Rp ${field.pricePerHour}',
+                            style: TextStyle(color: Colors.green.shade700),
+                          ),
+                          const SizedBox(height: 4),
+                          // Actions
+                          if (!isAdmin)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    size: 20,
+                                    color: Colors.blue,
+                                  ),
+                                  onPressed: () {
+                                    context.push(
+                                      '/owner/add-field',
+                                      extra: field,
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Delete Field?'),
+                                        content: const Text(
+                                          'Are you sure you want to delete this field?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => context.pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => context.pop(true),
+                                            child: const Text(
+                                              'Delete',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirm == true) {
+                                      await ref
+                                          .read(fieldRepositoryProvider)
+                                          .deleteField(field.id);
+                                      ref.invalidate(dashboardFieldsProvider);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, trace) => Text('Error: $e'),
+    );
+  }
+
+  Widget _buildBookingsList(WidgetRef ref) {
+    final bookingsAsync = ref.watch(dashboardBookingsProvider);
+    return bookingsAsync.when(
+      data: (bookings) {
+        if (bookings.isEmpty) return const Text('No bookings yet.');
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final booking = bookings[index];
+            final fieldName = booking['field']['name'] ?? 'Unknown Field';
+            final userEmail = booking['user']?['email'] ?? 'Unknown User';
+            final status = booking['status'];
+            final id = booking['id'];
+
+            Color statusColor = Colors.grey;
+            if (status == 'confirmed') statusColor = Colors.green;
+            if (status == 'pending') statusColor = Colors.orange;
+            if (status == 'cancelled') statusColor = Colors.red;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text(fieldName),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('By: $userEmail'),
+                    Text('Total: Rp ${booking["total_price"]}'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        status.toUpperCase(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: status == 'pending'
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                            ),
+                            onPressed: () async {
+                              await ref
+                                  .read(bookingRepositoryProvider)
+                                  .updateBookingStatus(id, 'confirmed');
+                              ref.invalidate(dashboardBookingsProvider);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.cancel, color: Colors.red),
+                            onPressed: () async {
+                              await ref
+                                  .read(bookingRepositoryProvider)
+                                  .updateBookingStatus(id, 'cancelled');
+                              ref.invalidate(dashboardBookingsProvider);
+                            },
+                          ),
+                        ],
+                      )
+                    : null,
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, trace) => Text('Error: $e'),
     );
   }
 }

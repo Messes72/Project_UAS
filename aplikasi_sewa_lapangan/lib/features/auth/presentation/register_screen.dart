@@ -72,17 +72,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               obscureText: true,
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _role,
-              decoration: const InputDecoration(labelText: 'Role'),
-              items: const [
-                DropdownMenuItem(value: 'user', child: Text('User')),
-                DropdownMenuItem(value: 'owner', child: Text('Field Owner')),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _role = val);
-              },
-            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -94,7 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
             TextButton(
-              onPressed: () => context.go('/login'),
+              onPressed: () => context.pushNamed('login'),
               child: const Text('Already have an account? Login'),
             ),
           ],
