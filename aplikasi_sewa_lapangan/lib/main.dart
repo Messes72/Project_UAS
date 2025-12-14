@@ -26,9 +26,8 @@ Future<void> main() async {
   // Load Env
   try {
     await dotenv.load(fileName: ".env");
-    print('DEBUG: .env loaded successfully');
   } catch (e) {
-    print('DEBUG: Failed to load .env: $e');
+    // Silent fail or log to crashlytics in real app
   }
 
   // Initialize Supabase
@@ -58,13 +57,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = Supabase.instance.client.auth.currentSession;
       final isAuthenticated = session != null;
       final path = state.uri.path;
-      print('DEBUG: Redirect Check - Path: $path, Auth: $isAuthenticated');
-
-      // Fallback for user role debug
-      if (isAuthenticated) {
-        final user = Supabase.instance.client.auth.currentUser;
-        print('DEBUG: Metadata: ${user?.userMetadata}');
-      }
 
       final isLogin = path == '/login';
       final isRegister = path == '/register';
@@ -84,11 +76,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!isAuthenticated) {
         if (!isPublic && !path.startsWith('/booking')) {
-          print('DEBUG: Unauth access to protected -> Redirect to /');
           return '/';
         }
         if (path.startsWith('/booking')) {
-          print('DEBUG: Unauth booking -> Redirect to /login');
           return '/login';
         }
         return null; // Allowed public route
@@ -99,24 +89,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         final email = session.user.email;
         String role = session.user.userMetadata?['role'] ?? 'user';
 
-        print('DEBUG: Auth Check - Email: $email, RawRole: $role, Path: $path');
-
         if (email == 'owner@gmail.com') role = 'owner';
         if (email == 'admin@gmail.com') role = 'admin';
-
-        print('DEBUG: ComputedRole: $role');
 
         final isOwnerOrAdmin = role == 'owner' || role == 'admin';
 
         // If Owner/Admin is on Login, Register, OR Home ('/'), send to Dashboard
         if (isOwnerOrAdmin && (isLogin || isRegister || path == '/')) {
-          print('DEBUG: Owner/Admin redirect to Dashboard');
           return '/owner-dashboard';
         }
 
         // If User is on Login or Register, send to Home
         if (!isOwnerOrAdmin && (isLogin || isRegister)) {
-          print('DEBUG: User redirect to Home');
           return '/';
         }
       }
