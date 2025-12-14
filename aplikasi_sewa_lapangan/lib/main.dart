@@ -9,6 +9,8 @@ import 'package:aplikasi_sewa_lapangan/features/auth/presentation/register_scree
 import 'package:aplikasi_sewa_lapangan/features/fields/presentation/owner_dashboard_screen.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/presentation/add_field_screen.dart';
 import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/home_screen.dart';
+import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/booking_screen.dart';
+import 'package:aplikasi_sewa_lapangan/features/fields/data/field_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,17 @@ final _router = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/owner/add-field',
+      builder: (context, state) => const AddFieldScreen(),
+    ),
+    GoRoute(
+      path: '/booking',
+      builder: (context, state) {
+        final field = state.extra as FieldModel;
+        return BookingScreen(field: field);
+      },
     ),
   ],
 );

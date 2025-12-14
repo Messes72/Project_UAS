@@ -51,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   isThreeLine: true,
                   onTap: () {
-                    // TODO: Navigate to Booking/Detail
+                    context.push('/booking', extra: field);
                   },
                 ),
               );
