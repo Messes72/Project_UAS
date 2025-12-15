@@ -61,6 +61,7 @@ class HomeScreen extends ConsumerWidget {
           final isAuthenticated = user != null;
           final isDarkMode = Theme.of(context).brightness == Brightness.dark;
           
+          
 
           return SingleChildScrollView(
             child: Column(
@@ -82,19 +83,19 @@ class HomeScreen extends ConsumerWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
                         colors: isDarkMode
                             ? [
-                                Colors.black.withOpacity(0.65),
-                                Colors.black.withOpacity(0.45),
-                                Colors.black.withOpacity(0.25),
+                                const Color.fromARGB(255, 16, 20, 15).withOpacity(0.95),
+                                const Color.fromARGB(255, 16, 20, 15).withOpacity(0.55),
+                                const Color.fromARGB(255, 16, 20, 15).withOpacity(0.25),
                                 Colors.transparent,
                               ]
                             : [
-                                Colors.white.withOpacity(0.85),
-                                Colors.white.withOpacity(0.65),
                                 Colors.white.withOpacity(0.35),
+                                Colors.white.withOpacity(0.25),
+                                Colors.white.withOpacity(0.15),
                                 Colors.transparent,
                               ],
                       ),
@@ -108,7 +109,7 @@ class HomeScreen extends ConsumerWidget {
                           'Sewa Lapangan Olahraga',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: Colors.white,
+                                color: isDarkMode ? Colors.white : Colors.black,
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -117,19 +118,19 @@ class HomeScreen extends ConsumerWidget {
                           'Lebih Cepat, Mudah, Tanpa Ribet',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.white70,
+                                color: isDarkMode ? Colors.white70 : Colors.black87,
                               ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Temukan dan booking lapangan futsal, basket, badminton, dan lainnya di sekitar Anda.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(color: Colors.white70),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: isDarkMode ? Colors.white70 : Colors.black87,
+                              ),
                         ),
                         const SizedBox(height: 32),
+
 
                         if (!isAuthenticated)
                           Row(
@@ -164,6 +165,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                
 
 
 
