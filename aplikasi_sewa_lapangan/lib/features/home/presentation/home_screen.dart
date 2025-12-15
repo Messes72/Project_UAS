@@ -59,6 +59,8 @@ class HomeScreen extends ConsumerWidget {
         data: (authState) {
           final user = authState.session?.user;
           final isAuthenticated = user != null;
+          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+          
 
           return SingleChildScrollView(
             child: Column(
@@ -66,121 +68,148 @@ class HomeScreen extends ConsumerWidget {
                 // Hero Section
                 Container(
                   width: double.infinity,
-                  color: Theme.of(context).primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 60,
-                    horizontal: 24,
+                  height: 520,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(
+                        isDarkMode
+                            ? 'assets/images/bg_home.png'
+                            : 'assets/images/bg_home_light.png',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        isAuthenticated
-                            ? 'Welcome back, ${user.userMetadata?['name'] ?? 'User'}!'
-                            : 'Sewa Lapangan Olahraga',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: isDarkMode
+                            ? [
+                                Colors.black.withOpacity(0.65),
+                                Colors.black.withOpacity(0.45),
+                                Colors.black.withOpacity(0.25),
+                                Colors.transparent,
+                              ]
+                            : [
+                                Colors.white.withOpacity(0.85),
+                                Colors.white.withOpacity(0.65),
+                                Colors.white.withOpacity(0.35),
+                                Colors.transparent,
+                              ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Dengan Mudah & Cepat',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Temukan dan booking lapangan futsal, basket, badminton, dan lainnya di sekitar Anda.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-                      ),
-                      const SizedBox(height: 40),
-                      // Buttons
-                      Column(
-                        children: [
-                          if (isAuthenticated) ...[
-                            ElevatedButton(
-                              onPressed: () => context.pushNamed('fields'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.green.shade700,
-                                minimumSize: const Size(double.infinity, 50),
+                    ),
+
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Sewa Lapangan Olahraga',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                              child: const Text('Mulai Cari Lapangan'),
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton(
-                              onPressed: () => context.pushNamed('my_bookings'),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.white),
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 50),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Lebih Cepat, Mudah, Tanpa Ribet',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white70,
                               ),
-                              child: const Text('Booking Saya'),
-                            ),
-                          ] else ...[
-                            ElevatedButton(
-                              onPressed: () => context.pushNamed('login'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.green.shade700,
-                                minimumSize: const Size(double.infinity, 50),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Temukan dan booking lapangan futsal, basket, badminton, dan lainnya di sekitar Anda.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 32),
+
+                        if (!isAuthenticated)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => context.pushNamed('login'),
+                                child: const Text('Login'),
                               ),
-                              child: const Text('Cari Lapangan (Login)'),
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton(
-                              onPressed: () => context.pushNamed('register'),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.white),
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 50),
+                              const SizedBox(width: 16),
+                              OutlinedButton(
+                                onPressed: () => context.pushNamed('register'),
+                                child: const Text('Daftar Sekarang'),
                               ),
-                              child: const Text('Daftar Sekarang'),
+                            ],
+                          )
+                        else
+                          ElevatedButton(
+                            onPressed: () => context.pushNamed('dashboard'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
                             ),
-                          ],
-                        ],
-                      ),
-                    ],
+                            child: const Text('Masuk ke Dashboard'),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
 
+
+
+
                 // Features Section
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Kenapa Memilih Kami?',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      'Kenapa Memilih Kami?',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 32),
+                    Wrap(
+                      spacing: 24,
+                      runSpacing: 24,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _featureBox(
+                          context: context,
+                          icon: Icons.touch_app,
+                          title: 'Booking Instan',
+                          desc: 'Pilih jam, cek ketersediaan, dan langsung booking.',
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Booking Instan',
-                        desc:
-                            'Pilih jam, cek ketersediaan, dan langsung booking.',
-                        icon: Icons.touch_app,
-                      ),
-                      _buildFeatureCard(
-                        context,
-                        title: 'Pembayaran Mudah',
-                        desc: 'Upload bukti pembayaran dan konfirmasi instan.',
-                        icon: Icons.payment,
-                      ),
-                    ],
-                  ),
+                        _featureBox(
+                          context: context,
+                          icon: Icons.payment,
+                          title: 'Pembayaran Mudah',
+                          desc: 'Upload bukti pembayaran dan konfirmasi instan.',
+                        ),
+                        _featureBox(
+                          context: context,
+                          icon: Icons.access_time,
+                          title: 'Tersedia Kapan Saja',
+                          desc: 'Layanan 24 jam yang dapat diakses kapanpun.',
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
+
               ],
             ),
           );
@@ -191,34 +220,52 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFeatureCard(
-    BuildContext context, {
+    Widget _featureBox({
+    required IconData icon,
     required String title,
     required String desc,
-    required IconData icon,
+    required BuildContext context,
   }) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 24),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: Theme.of(context).primaryColor),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 40, color: Colors.green),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-            const SizedBox(height: 8),
-            Text(
-              desc,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            desc,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black87,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
 }

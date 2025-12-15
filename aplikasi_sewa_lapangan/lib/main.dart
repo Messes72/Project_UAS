@@ -196,9 +196,10 @@ class MyApp extends ConsumerWidget {
         ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
-          centerTitle: true,
+          centerTitle: false,
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
+          titleSpacing: 16,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -216,7 +217,7 @@ class MyApp extends ConsumerWidget {
         ),
         useMaterial3: true,
         appBarTheme: AppBarTheme(
-          centerTitle: true,
+          centerTitle: false,
           backgroundColor: Colors.green.shade900,
           foregroundColor: Colors.white,
         ),
