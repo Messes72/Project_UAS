@@ -25,7 +25,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
       if (mounted) {
-        // Navigation will be handled by the router listener
+        // Navigate to home after successful login
+        context.go('/');
       }
     } catch (e) {
       if (mounted) {
