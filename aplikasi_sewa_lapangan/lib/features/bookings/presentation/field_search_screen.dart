@@ -105,6 +105,7 @@ class FieldSearchScreen extends ConsumerWidget {
                         break;
                       case 'logout':
                         ref.read(authRepositoryProvider).signOut();
+                        context.push('/home');
                         break;
                     }
                   },

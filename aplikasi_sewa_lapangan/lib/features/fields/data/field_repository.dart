@@ -22,8 +22,10 @@ class FieldRepository {
   FieldRepository(this._client);
 
   Future<void> deleteField(String id) async {
-    await _client.from('fields').delete().eq('id', id);
-  }
+  // Update status menjadi tidak aktif (false)
+  // Pastikan kolom is_active ada di database
+  await _client.from('fields').update({'is_active': false}).eq('id', id);
+}
 
   Future<List<FieldModel>> getMyFields() async {
     final response = await _client

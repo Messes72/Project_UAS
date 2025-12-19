@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_model.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_repository.dart';
+// IMPORT INI PENTING (Pastikan path file location_picker_screen benar)
+import 'package:aplikasi_sewa_lapangan/features/fields/presentation/location_picker_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:latlong2/latlong.dart'; // Pastikan package latlong2 ada
 import 'dart:typed_data';
 
 class AddFieldScreen extends ConsumerStatefulWidget {
-  final FieldModel? field; // Optional for Edit Mode
+  final FieldModel? field; 
   const AddFieldScreen({super.key, this.field});
 
   @override
@@ -25,13 +28,24 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
   late final TextEditingController _priceController;
   late final TextEditingController _addressController;
   
-  // Coordinate Controllers (DMS Format)
-  final TextEditingController _latDmsController = TextEditingController();
-  final TextEditingController _lngDmsController = TextEditingController();
+  // Coordinate Controllers (Bisa Decimal atau DMS)
+  final TextEditingController _latController = TextEditingController();
+  final TextEditingController _lngController = TextEditingController();
 
   bool _isLoading = false;
   XFile? _selectedImage;
   Uint8List? _imageBytes;
+
+  final List<String> _availableFacilities = [
+    'Free WiFi',
+    'Parking Area',
+    'Shower Room',
+    'Canteen',
+    'Locker Room',
+    'Musholla',
+    'Toilet'
+  ];
+  List<String> _selectedFacilities = [];
 
   @override
   void initState() {
@@ -41,6 +55,14 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
     _descController = TextEditingController(text: f?.description ?? '');
     _priceController = TextEditingController(text: f?.pricePerHour.toString() ?? '');
     _addressController = TextEditingController(text: f?.address ?? '');
+    
+    if (f != null) {
+      if (f.lat != null) _latController.text = f.lat.toString();
+      if (f.lng != null) _lngController.text = f.lng.toString();
+      // Load fasilitas yang sudah ada (jika edit mode)
+      _selectedFacilities = List.from(f.facilities); 
+    }
+    
   }
 
   @override
@@ -49,8 +71,8 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
     _descController.dispose();
     _priceController.dispose();
     _addressController.dispose();
-    _latDmsController.dispose();
-    _lngDmsController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     super.dispose();
   }
 
@@ -66,11 +88,33 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
     }
   }
 
-  /// Logika Konversi DMS ke Decimal
-  double? _convertDmsToDecimal(String dms) {
+  // --- LOGIC BUKA MAP ---
+  Future<void> _openMapPicker() async {
+    final LatLng? result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const LocationPickerScreen()),
+    );
+
+    if (result != null) {
+      setState(() {
+        // Isi Controller dengan Decimal
+        _latController.text = result.latitude.toString();
+        _lngController.text = result.longitude.toString();
+      });
+    }
+  }
+
+  // --- LOGIC PARSE KOORDINAT (Cerdas) ---
+  double? _parseCoordinate(String input) {
+    if (input.isEmpty) return null;
+    
+    // 1. Coba parse Decimal (-7.25)
+    final decimal = double.tryParse(input);
+    if (decimal != null) return decimal;
+
+    // 2. Coba parse DMS (7°16'45"S)
     try {
       final regex = RegExp(r'''(\d+)[°\s]+(\d+)['\s]+(\d+(?:\.\d+)?)["\s]*([NSEW])''', caseSensitive: false);
-      final match = regex.firstMatch(dms.trim());
+      final match = regex.firstMatch(input.trim());
 
       if (match != null) {
         double deg = double.parse(match.group(1)!);
@@ -78,17 +122,24 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
         double sec = double.parse(match.group(3)!);
         String dir = match.group(4)!.toUpperCase();
 
-        double decimal = deg + (min / 60) + (sec / 3600);
-
-        if (dir == 'S' || dir == 'W') {
-          decimal = -decimal;
-        }
-        return decimal;
+        double result = deg + (min / 60) + (sec / 3600);
+        if (dir == 'S' || dir == 'W') result = -result;
+        
+        return result;
       }
     } catch (e) {
       debugPrint("Conversion Error: $e");
     }
     return null;
+  }
+  void _toggleFacility(String facility, bool? isSelected) {
+    setState(() {
+      if (isSelected == true) {
+        _selectedFacilities.add(facility);
+      } else {
+        _selectedFacilities.remove(facility);
+      }
+    });
   }
 
   Future<void> _submit() async {
@@ -101,25 +152,15 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
       return;
     }
 
-    double? finalLat;
-    double? finalLng;
+    // Parse lat/lng
+    double? finalLat = _parseCoordinate(_latController.text);
+    double? finalLng = _parseCoordinate(_lngController.text);
 
-    if (_latDmsController.text.isNotEmpty && _lngDmsController.text.isNotEmpty) {
-      finalLat = _convertDmsToDecimal(_latDmsController.text);
-      finalLng = _convertDmsToDecimal(_lngDmsController.text);
-
-      if (finalLat == null || finalLng == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid Coordinate Format! Use: 7°16\'45"S'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-    } else if (widget.field != null) {
-      finalLat = widget.field!.lat;
-      finalLng = widget.field!.lng;
+    if (finalLat == null || finalLng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid Coordinates! Use Map or format like -7.25')),
+      );
+      return;
     }
 
     setState(() => _isLoading = true);
@@ -135,6 +176,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
         'address': _addressController.text,
         'lat': finalLat, 
         'lng': finalLng, 
+        'facilities': _selectedFacilities,
       };
 
       String targetFieldId;
@@ -156,6 +198,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
           isActive: true,
           createdAt: DateTime.now(),
           images: [],
+          facilities: _selectedFacilities,
         );
         await ref.read(fieldRepositoryProvider).addField(newField);
       }
@@ -193,12 +236,9 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.field != null;
-    
-    // --- THEME DATA ACCESS ---
     final theme = Theme.of(context);
-    final isDarkMode = true;
+    final isDarkMode = true; // Hardcoded sesuai request sebelumnya
     
-    // Warna Card & Input yang Adaptif
     final cardColor = theme.cardColor;
     final inputFillColor = isDarkMode ? theme.scaffoldBackgroundColor : Colors.grey.shade50;
     final borderColor = isDarkMode ? Colors.white12 : Colors.grey.shade300;
@@ -212,17 +252,10 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: theme.scaffoldBackgroundColor,
-        surfaceTintColor: theme.scaffoldBackgroundColor,
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: cardColor, 
-          boxShadow: [
-            if (!isDarkMode)
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))
-          ]
-        ),
+        decoration: BoxDecoration(color: cardColor, boxShadow: [if (!isDarkMode) BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
         child: ElevatedButton(
           onPressed: _isLoading ? null : _submit,
           style: ElevatedButton.styleFrom(
@@ -231,9 +264,9 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: _isLoading
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Save Field', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          child: _isLoading 
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : const Text('Save Field', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
       body: SingleChildScrollView(
@@ -243,7 +276,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- SECTION 1: FIELD IMAGE ---
+              // --- SECTION 1 ---
               _buildSectionTitle('Field Image', theme),
               const SizedBox(height: 12),
               GestureDetector(
@@ -256,15 +289,22 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: borderColor),
                     image: _imageBytes != null
-                        ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
-                        : (isEdit && widget.field!.images.isNotEmpty)
-                            ? DecorationImage(
-                                image: NetworkImage(
-                                  Supabase.instance.client.storage.from('field-images').getPublicUrl(widget.field!.images.first),
-                                ),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+                    ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
+                    : (isEdit && widget.field!.images.isNotEmpty)
+                        ? DecorationImage(
+                            image: NetworkImage(
+                              // --- PERBAIKAN LOGIC DI SINI ---
+                              // Cek dulu: apakah string gambar sudah ada 'http'-nya?
+                              widget.field!.images.first.contains('http')
+                                  ? widget.field!.images.first // Jika ya, pakai langsung
+                                  : Supabase.instance.client.storage
+                                      .from('field-images')
+                                      .getPublicUrl(widget.field!.images.first), // Jika tidak, baru generate URL
+                              // -------------------------------
+                            ),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
                   child: (_imageBytes == null && (!isEdit || widget.field!.images.isEmpty))
                       ? Column(
@@ -278,10 +318,9 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                       : null,
                 ),
               ),
-              
               const SizedBox(height: 24),
 
-              // --- SECTION 2: BASIC INFO ---
+              // --- SECTION 2 ---
               _buildSectionTitle('Basic Information', theme),
               const SizedBox(height: 12),
               Container(
@@ -321,7 +360,34 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
 
+              _buildSectionTitle('Facilities', theme),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: isDarkMode ? Border.all(color: borderColor) : null,
+                  boxShadow: !isDarkMode ? [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))] : null,
+                ),
+                child: Column(
+                  children: _availableFacilities.map((facility) {
+                    final isChecked = _selectedFacilities.contains(facility);
+                    return CheckboxListTile(
+                      title: Text(facility, style: TextStyle(color: textColor)),
+                      value: isChecked,
+                      activeColor: theme.primaryColor,
+                      checkColor: Colors.white,
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading, // Checkbox di kiri
+                      onChanged: (val) => _toggleFacility(facility, val),
+                    );
+                  }).toList(),
+                ),
+              ),
+              
               const SizedBox(height: 24),
 
               // --- SECTION 3: LOCATION & COORDINATES ---
@@ -347,16 +413,32 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                     ),
                     const SizedBox(height: 20),
                     
+                    // Header Coordinates + Button Map
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(Icons.map, size: 18, color: hintColor),
-                        const SizedBox(width: 8),
-                        Text('Coordinates (DMS Format)', style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
+                        Row(
+                          children: [
+                            Icon(Icons.map, size: 18, color: hintColor),
+                            const SizedBox(width: 8),
+                            Text('Coordinates', style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
+                          ],
+                        ),
+                        
+                        // TOMBOL PICK MAP
+                        TextButton.icon(
+                          onPressed: _openMapPicker,
+                          icon: const Icon(Icons.pin_drop),
+                          label: const Text('Pick on Map'),
+                          style: TextButton.styleFrom(
+                            iconColor: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Example: 7°16\'45"S  and  112°41\'27"E',
+                      'Select from map OR input manual (Decimal / DMS)',
                       style: TextStyle(fontSize: 12, color: hintColor, fontStyle: FontStyle.italic),
                     ),
                     const SizedBox(height: 12),
@@ -366,18 +448,18 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                       children: [
                         Expanded(
                           child: _buildTextField(
-                            controller: _latDmsController,
+                            controller: _latController,
                             label: 'Latitude',
-                            hint: '7°16\'45"S',
+                            hint: '-7.2575',
                             theme: theme, isDarkMode: isDarkMode,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildTextField(
-                            controller: _lngDmsController,
+                            controller: _lngController,
                             label: 'Longitude',
-                            hint: '112°41\'27"E',
+                            hint: '112.7521',
                             theme: theme, isDarkMode: isDarkMode,
                           ),
                         ),
@@ -423,7 +505,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
-      style: theme.textTheme.bodyMedium, // Warna teks input mengikuti tema
+      style: theme.textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: theme.hintColor),
