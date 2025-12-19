@@ -53,10 +53,11 @@ class FieldRepository {
   Future<void> addField(FieldModel field) async {
     await _client.from('fields').insert({
       ...field.toJson(),
+      'id': field.id, // <--- TAMBAHKAN BARIS INI (PENTING!)
       'owner_id': _client.auth.currentUser!.id,
     });
   }
-
+  
   Future<void> updateField(String id, Map<String, dynamic> updates) async {
     await _client.from('fields').update(updates).eq('id', id);
   }

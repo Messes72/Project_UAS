@@ -23,11 +23,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
       if (mounted) {
-<<<<<<< Updated upstream
-        // Navigation will be handled by the router listener
-=======
         context.go('/');
->>>>>>> Stashed changes
       }
     } catch (e) {
       if (mounted) {

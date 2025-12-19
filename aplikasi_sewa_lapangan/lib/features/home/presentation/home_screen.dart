@@ -149,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
                           )
                         else
                           ElevatedButton(
-                            onPressed: () => context.pushNamed('dashboard'),
+                            onPressed: () => context.pushNamed('fields'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 40,
