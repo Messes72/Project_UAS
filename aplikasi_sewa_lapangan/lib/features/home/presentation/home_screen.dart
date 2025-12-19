@@ -159,7 +159,7 @@ class HomeScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            child: const Text('Masuk ke Dashboard'),
+                            child: const Text('Booking Sekarang', style: TextStyle(fontSize: 16)),
                           ),
                       ],
                     ),

@@ -95,6 +95,14 @@ class BookingRepository {
     });
   }
 
+  Future<void> cancelBooking(String bookingId) async {
+    await _client
+        .from('bookings')
+        .update({'status': 'cancelled'}) // Set status ke cancelled
+        .eq('id', bookingId)
+        .eq('user_id', _client.auth.currentUser!.id); // Pastikan update punya user sendiri
+  }
+
   Future<void> uploadPaymentProof(
     String bookingId,
     List<int> bytes,
