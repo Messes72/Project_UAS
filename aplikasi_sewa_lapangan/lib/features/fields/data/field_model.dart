@@ -10,6 +10,7 @@ class FieldModel {
   final bool isActive;
   final DateTime createdAt;
   final List<String> images;
+  final List<String> facilities;
 
   FieldModel({
     required this.id,
@@ -23,6 +24,7 @@ class FieldModel {
     required this.isActive,
     required this.createdAt,
     this.images = const [],
+    required this.facilities,
   });
 
   factory FieldModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,9 @@ class FieldModel {
       lng: json['lng'] != null ? (json['lng'] as num).toDouble() : null,
       isActive: json['is_active'] ?? true,
       createdAt: DateTime.parse(json['created_at']),
+      facilities: json['facilities'] != null 
+          ? List<String>.from(json['facilities']) 
+          : [], // Default kosong jika null
       images:
           (json['field_images'] as List<dynamic>?)
               ?.map((e) => e['file_path'] as String)
@@ -54,6 +59,7 @@ class FieldModel {
       if (lat != null) 'lat': lat,
       if (lng != null) 'lng': lng,
       'is_active': isActive,
+      'facilities': facilities,
       // Note: field_images are handled separately in DB
     };
   }
