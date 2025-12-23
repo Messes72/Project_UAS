@@ -69,7 +69,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _extractErrorMessage(Object e) {
-    // Prefer a `message` property on exception-like objects
     try {
       final dyn = e as dynamic;
       if (dyn is String) return dyn;
@@ -82,7 +81,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (_) {}
 
     final s = e.toString();
-    // Extract after common prefixes like 'Exception: ' or 'Error: '
     final m = RegExp(r'(?:(?:Exception|Error):\s*)(.*)', dotAll: true).firstMatch(s);
     if (m != null) return m.group(1)!.trim();
     return s;
@@ -103,7 +101,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Label & Field tetap rata kiri
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- BAGIAN HEADER (LOGO & JUDUL DI TENGAH) ---
             Center(
@@ -112,7 +110,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(height: 20),
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 100, // Sesuaikan ukuran logo Anda
+                    height: 100,
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 16),
@@ -130,7 +128,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
             
-            const SizedBox(height: 32), // Jarak ke input pertama
+            const SizedBox(height: 32), 
 
             // --- FIELD NAMA ---
             const Text(
@@ -146,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               decoration: InputDecoration(
                 hintText: 'Nama Lengkap',
                 errorText: _nameError,
-                border: const OutlineInputBorder(), // Menambah border agar lebih rapi
+                border: const OutlineInputBorder(), 
               ),
             ),
             
@@ -197,7 +195,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // --- TOMBOL REGISTER ---
             SizedBox(
               width: double.infinity,
-              height: 50, // Membuat tombol sedikit lebih tebal
+              height: 50, 
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _signUp,
                 child: _isLoading

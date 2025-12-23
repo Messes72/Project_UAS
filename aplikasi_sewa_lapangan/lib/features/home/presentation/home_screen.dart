@@ -15,7 +15,6 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Sewa Lapangan'),
         actions: [
-          // Theme Toggle
           Consumer(
             builder: (context, ref, child) {
               final themeMode = ref.watch(themeModeProvider);
@@ -34,12 +33,10 @@ class HomeScreen extends ConsumerWidget {
               );
             },
           ),
-          // Settings (Global)
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.pushNamed('settings'),
           ),
-          // Logout (if logged in)
           authStateAsync.when(
             data: (state) {
               if (state.session != null) {
@@ -167,10 +164,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 
 
-
-
-
-                // Features Section
                 Padding(
                 padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                 child: Column(

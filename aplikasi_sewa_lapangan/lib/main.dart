@@ -10,8 +10,8 @@ import 'package:aplikasi_sewa_lapangan/features/auth/presentation/login_screen.d
 import 'package:aplikasi_sewa_lapangan/features/auth/presentation/register_screen.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/presentation/owner_dashboard_screen.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/presentation/add_field_screen.dart';
-import 'package:aplikasi_sewa_lapangan/features/home/presentation/home_screen.dart'; // New Home
-import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/field_search_screen.dart'; // Renamed Search
+import 'package:aplikasi_sewa_lapangan/features/home/presentation/home_screen.dart'; 
+import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/field_search_screen.dart'; 
 import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/booking_screen.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_model.dart';
 import 'package:aplikasi_sewa_lapangan/features/bookings/presentation/my_bookings_screen.dart';
@@ -27,7 +27,6 @@ Future<void> main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // Silent fail or log to crashlytics in real app
   }
 
   // Initialize Supabase
@@ -81,7 +80,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (path.startsWith('/booking')) {
           return '/login';
         }
-        return null; // Allowed public route
+        return null; 
       }
 
       // Authenticated
@@ -94,12 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         final isOwnerOrAdmin = role == 'owner' || role == 'admin';
 
-        // If Owner/Admin is on Login, Register, OR Home ('/'), send to Dashboard
         if (isOwnerOrAdmin && (isLogin || isRegister || path == '/')) {
           return '/owner-dashboard';
         }
 
-        // If User is on Login or Register, send to Home
         if (!isOwnerOrAdmin && (isLogin || isRegister)) {
           return '/';
         }

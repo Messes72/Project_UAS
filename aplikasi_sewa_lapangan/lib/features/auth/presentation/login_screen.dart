@@ -40,11 +40,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      // Menggunakan SingleChildScrollView agar tidak overflow saat keyboard muncul
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Label rata kiri
+          crossAxisAlignment: CrossAxisAlignment.start, 
           children: [
             // --- HEADER (LOGO & JUDUL) ---
             Center(
@@ -55,7 +54,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     'assets/images/logo.png',
                     height: 100,
                     fit: BoxFit.contain,
-                    // Menambahkan errorBuilder agar jika gambar gagal load, app tidak crash
                     errorBuilder: (context, error, stackTrace) =>
                         const Icon(Icons.image_not_supported, size: 100),
                   ),

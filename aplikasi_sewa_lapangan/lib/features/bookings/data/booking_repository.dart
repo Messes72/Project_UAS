@@ -31,15 +31,13 @@ class BookingRepository {
   Future<List<BookingModel>> getMyBookings() async {
     final response = await _client
         .from('bookings')
-        .select('*, field:fields(*)') // Join with fields
+        .select('*, field:fields(*)') 
         .eq('user_id', _client.auth.currentUser!.id)
         .order('created_at', ascending: false);
     return (response as List).map((e) => BookingModel.fromJson(e)).toList();
   }
 
-  // New method for Owners
   Future<List<Map<String, dynamic>>> getOwnerBookings() async {
-    // 1. Get my field IDs
     final myFields = await _client
         .from('fields')
         .select('id')
@@ -49,20 +47,16 @@ class BookingRepository {
 
     if (fieldIds.isEmpty) return [];
 
-    // 2. Get bookings for these fields
     final response = await _client
         .from('bookings')
-        // We need user info too.
         .select('*, field:fields(name), user:users(email, id)')
         .filter(
           'field_id',
           'in',
           fieldIds,
-        ) // Fixed: usage of filter instead of in_
+        ) 
         .order('created_at', ascending: false);
 
-    // Return raw maps since BookingModel might not strictly hold the joined 'user'/'field' data deeply
-    // or we can adjust logic to map it manually.
     return List<Map<String, dynamic>>.from(response as List);
   }
 
@@ -83,7 +77,6 @@ class BookingRepository {
   }
 
   Future<void> createBooking(BookingModel booking) async {
-    // Note: We omit ID and let DB generate it, or handle it same as FieldModel
     await _client.from('bookings').insert({
       'field_id': booking.fieldId,
       'user_id': _client.auth.currentUser!.id,
@@ -91,16 +84,15 @@ class BookingRepository {
       'end_time': booking.endTime.toIso8601String(),
       'status': booking.status,
       'total_price': booking.totalPrice,
-      // proof_of_payment_url is usually added later or during creation if available
     });
   }
 
   Future<void> cancelBooking(String bookingId) async {
     await _client
         .from('bookings')
-        .update({'status': 'cancelled'}) // Set status ke cancelled
+        .update({'status': 'cancelled'})
         .eq('id', bookingId)
-        .eq('user_id', _client.auth.currentUser!.id); // Pastikan update punya user sendiri
+        .eq('user_id', _client.auth.currentUser!.id);
   }
 
   Future<void> uploadPaymentProof(
@@ -110,7 +102,7 @@ class BookingRepository {
   ) async {
     final fileName =
         '${bookingId}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-    final path = fileName; // Relative path stored in DB
+    final path = fileName; 
 
     // 1. Upload
     await _client.storage

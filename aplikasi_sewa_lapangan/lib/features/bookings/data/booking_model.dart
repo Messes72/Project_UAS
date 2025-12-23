@@ -8,7 +8,7 @@ class BookingModel {
   final double totalPrice;
   final String? proofOfPaymentUrl;
   final DateTime createdAt;
-  final String? fieldName; // Added
+  final String? fieldName;
 
   BookingModel({
     required this.id,
@@ -34,7 +34,7 @@ class BookingModel {
       totalPrice: (json['total_price'] as num).toDouble(),
       proofOfPaymentUrl: json['proof_of_payment_url'],
       createdAt: DateTime.parse(json['created_at']),
-      fieldName: json['field']['name'] as String?, // Nested join
+      fieldName: json['field']['name'] as String?, 
     );
   }
 

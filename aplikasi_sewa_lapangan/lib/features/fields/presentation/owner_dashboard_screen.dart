@@ -97,7 +97,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildBookingsList(ref, context), // Pass context here
+            _buildBookingsList(ref, context),
           ],
         ),
       ),
@@ -109,10 +109,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
     return fieldsAsync.when(
       data: (allFields) {
         
-        // --- FILTERING DATA ---
-        // Hanya ambil field yang isActive == true
         final fields = allFields.where((field) => field.isActive).toList();
-        // ----------------------
 
         if (fields.isEmpty) {
           return const Text('No active fields found.');
@@ -134,7 +131,6 @@ class OwnerDashboardScreen extends ConsumerWidget {
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () {
-                  // Optional: Open detail or edit
                 },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,7 +292,6 @@ class OwnerDashboardScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           
-                          // --- TOMBOL LIHAT BUKTI BAYAR ---
                           if (proofUrl != null)
                             InkWell(
                               onTap: () => _showPaymentProof(context, proofUrl),
@@ -368,7 +363,6 @@ class OwnerDashboardScreen extends ConsumerWidget {
     );
   }
 
-  // --- LOGIC UNTUK MENAMPILKAN GAMBAR ---
   void _showPaymentProof(BuildContext context, String path) {
     showDialog(
       context: context,
@@ -396,7 +390,6 @@ class OwnerDashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     FutureBuilder<String>(
-                      // Menggunakan Signed URL agar aman (berlaku 60 detik)
                       future: Supabase.instance.client.storage
                           .from('payment-proofs')
                           .createSignedUrl(path, 60),

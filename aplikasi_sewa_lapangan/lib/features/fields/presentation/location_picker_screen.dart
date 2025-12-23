@@ -10,7 +10,6 @@ class LocationPickerScreen extends StatefulWidget {
 }
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
-  // Default start location (Surabaya)
   LatLng _pickedLocation = const LatLng(-7.2575, 112.7521); 
   final MapController _mapController = MapController();
 
@@ -25,7 +24,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () {
-              // Kembalikan data LatLng ke screen sebelumnya
               Navigator.of(context).pop(_pickedLocation);
             },
           )
@@ -70,7 +68,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             ],
           ),
           
-          // Info Box di bawah
           Positioned(
             bottom: 20,
             left: 20,

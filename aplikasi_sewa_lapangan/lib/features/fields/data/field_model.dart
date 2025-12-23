@@ -41,7 +41,7 @@ class FieldModel {
       createdAt: DateTime.parse(json['created_at']),
       facilities: json['facilities'] != null 
           ? List<String>.from(json['facilities']) 
-          : [], // Default kosong jika null
+          : [], 
       images:
           (json['field_images'] as List<dynamic>?)
               ?.map((e) => e['file_path'] as String)
@@ -60,7 +60,6 @@ class FieldModel {
       if (lng != null) 'lng': lng,
       'is_active': isActive,
       'facilities': facilities,
-      // Note: field_images are handled separately in DB
     };
   }
 }

@@ -14,7 +14,6 @@ class FieldDetailScreen extends StatelessWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
 
-    // Helper untuk load image
     Widget buildImage() {
       if (field.images.isEmpty) {
         return Container(
@@ -110,7 +109,6 @@ class FieldDetailScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Title & Rating
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +128,6 @@ class FieldDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     
-                    // Address
                     Row(
                       children: [
                         Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
@@ -140,7 +137,6 @@ class FieldDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    // Price & Status
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -166,7 +162,6 @@ class FieldDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    // --- FACILITIES SECTION (DYNAMIC) ---
                     if (field.facilities.isNotEmpty) ...[
                       Text('Facilities', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
@@ -181,7 +176,6 @@ class FieldDetailScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                     ],
 
-                    // Description
                     Text('Description', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(
@@ -198,7 +192,6 @@ class FieldDetailScreen extends StatelessWidget {
         ],
       ),
 
-      // Bottom Bar
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         decoration: BoxDecoration(color: theme.scaffoldBackgroundColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
@@ -214,12 +207,10 @@ class FieldDetailScreen extends StatelessWidget {
     );
   }
 
-  // Widget Helper untuk Chip Fasilitas (Dynamic Icon)
   Widget _buildFacilityChip(BuildContext context, String label) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     
-    // Mapping Nama Fasilitas ke Icon
     IconData getIcon(String name) {
       final n = name.toLowerCase();
       if (n.contains('wifi')) return Icons.wifi;
@@ -230,7 +221,7 @@ class FieldDetailScreen extends StatelessWidget {
       if (n.contains('toilet') || n.contains('wc')) return Icons.wc;
       if (n.contains('mosque') || n.contains('musholla')) return Icons.mosque;
       if (n.contains('tribun')) return Icons.stadium;
-      return Icons.check_circle_outline; // Default icon
+      return Icons.check_circle_outline; 
     }
 
     return Container(

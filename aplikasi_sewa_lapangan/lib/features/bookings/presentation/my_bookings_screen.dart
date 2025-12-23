@@ -13,11 +13,9 @@ class MyBookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
-  // State untuk loading indikator
   bool _isUploading = false;
   bool _isCancelling = false;
 
-  /// Fungsi untuk Upload Bukti Pembayaran
   Future<void> _pickAndUpload(String bookingId) async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -37,7 +35,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Proof uploaded successfully!')),
         );
-        // Refresh data booking
         ref.invalidate(myBookingsProvider);
       }
     } catch (e) {
@@ -51,9 +48,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     }
   }
 
-  /// Fungsi Baru: Cancel Booking
   Future<void> _cancelBooking(String bookingId) async {
-    // 1. Tampilkan Dialog Konfirmasi
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -75,7 +70,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
     if (confirm != true) return;
 
-    // 2. Proses Cancel
     setState(() => _isCancelling = true);
     try {
       await ref.read(bookingRepositoryProvider).cancelBooking(bookingId);
@@ -111,7 +105,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           return Stack(
             children: [
               ListView.builder(
-                padding: const EdgeInsets.only(bottom: 80), // Space for fab/bottom
+                padding: const EdgeInsets.only(bottom: 80), 
                 itemCount: bookings.length,
                 itemBuilder: (context, index) {
                   final booking = bookings[index];
@@ -119,11 +113,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                   final endFmt = DateFormat('HH:mm').format(booking.endTime);
                   final hasProof = booking.proofOfPaymentUrl != null;
                   
-                  // Cek Status
                   final isCancelled = booking.status == 'cancelled';
                   final isCompleted = booking.status == 'completed';
 
-                  // Logic Warna Status
                   Color statusColor = Colors.grey;
                   if (booking.status == 'confirmed') statusColor = Colors.green;
                   else if (booking.status == 'pending') statusColor = Colors.orange;
@@ -136,7 +128,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Header: Nama Field & Status ---
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -168,11 +159,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                           ),
                           const SizedBox(height: 8),
 
-                          // --- Waktu ---
                           Text('$startFmt - $endFmt'),
                           const SizedBox(height: 8),
 
-                          // --- Harga ---
                           Text(
                             'Rp ${booking.totalPrice.toStringAsFixed(0)}',
                             style: TextStyle(
@@ -183,7 +172,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // --- Section Bukti Pembayaran (Image) ---
                           if (hasProof)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +183,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                                 const SizedBox(height: 8),
                                 InkWell(
                                   onTap: () {
-                                    // Optional: Tambahkan logic untuk buka full screen image
                                   },
                                   child: FutureBuilder<String>(
                                     future: Supabase.instance.client.storage
@@ -238,11 +225,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
                           const SizedBox(height: 16),
 
-                          // --- Action Buttons ---
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              // Tombol Cancel: Hanya muncul jika BELUM cancel & BELUM selesai
                               if (!isCancelled && !isCompleted)
                                 TextButton(
                                   onPressed: (_isCancelling || _isUploading)
@@ -256,7 +241,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                               
                               const SizedBox(width: 8),
 
-                              // Tombol Upload: Muncul jika BELUM ada bukti & BELUM cancel
                               if (!hasProof && !isCancelled)
                                 ElevatedButton.icon(
                                   onPressed: (_isCancelling || _isUploading)
@@ -274,7 +258,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                 },
               ),
 
-              // --- Loading Overlay ---
               if (_isUploading || _isCancelling)
                 Container(
                   color: Colors.black54,

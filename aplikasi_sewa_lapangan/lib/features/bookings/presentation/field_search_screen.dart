@@ -8,12 +8,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- PROVIDERS ---
 
-// 1. Provider untuk mengambil data dari Database
 final allFieldsProvider = FutureProvider<List<FieldModel>>((ref) async {
   return ref.watch(fieldRepositoryProvider).getAllActiveFields();
 });
 
-// 2. Provider untuk menyimpan state Text Pencarian
 final searchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
 // --- MAIN SCREEN ---
@@ -23,11 +21,9 @@ class FieldSearchScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Watch Data & State
     final fieldsAsync = ref.watch(allFieldsProvider);
     final searchQuery = ref.watch(searchQueryProvider);
 
-    // 2. Tema & Warna Adaptif (Dark/Light Mode)
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -36,23 +32,20 @@ class FieldSearchScreen extends ConsumerWidget {
     final headerIconColor = isDarkMode ? Colors.white : Colors.green;
 
     return Scaffold(
-      // Unfocus keyboard saat tap area kosong
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             
-            // --- A. PINNED APP BAR (Berisi Search Bar) ---
             SliverAppBar(
               floating: true,
               pinned: true, 
               elevation: 0,
               backgroundColor: theme.scaffoldBackgroundColor,
               surfaceTintColor: theme.scaffoldBackgroundColor,
-              toolbarHeight: 70, // Sedikit lebih tinggi agar search bar lega
+              toolbarHeight: 70,
               
-              // Search Bar kita taruh di 'title' agar stabil saat pinned
               title: Container(
                 height: 45,
                 decoration: BoxDecoration(
@@ -86,13 +79,11 @@ class FieldSearchScreen extends ConsumerWidget {
               ),
 
               actions: [
-                // Icon Map
                 IconButton(
                   icon: Icon(Icons.map_outlined, color: headerIconColor),
                   onPressed: () => context.push('/map'),
                   tooltip: 'Map View',
                 ),
-                // Icon Menu (Titik Tiga)
                 PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: headerIconColor),
                   onSelected: (value) {
@@ -132,7 +123,6 @@ class FieldSearchScreen extends ConsumerWidget {
             ),
 
             // --- B. HEADER TEXT (Scrollable) ---
-            // Judul besar ditaruh di sini agar ikut ter-scroll ke atas
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
@@ -159,7 +149,6 @@ class FieldSearchScreen extends ConsumerWidget {
             // --- C. LIST CONTENT ---
             fieldsAsync.when(
               data: (fields) {
-                // Logic Filtering
                 final filteredFields = fields.where((field) {
                   final query = searchQuery.toLowerCase();
                   final name = field.name.toLowerCase();
@@ -167,7 +156,6 @@ class FieldSearchScreen extends ConsumerWidget {
                   return name.contains(query) || address.contains(query);
                 }).toList();
 
-                // State Kosong (Empty State)
                 if (filteredFields.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -189,7 +177,6 @@ class FieldSearchScreen extends ConsumerWidget {
                   );
                 }
 
-                // Render List Card
                 return SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   sliver: SliverList(
@@ -255,7 +242,6 @@ class _ModernFieldCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Gambar & Badge
               Stack(
                 children: [
                   ClipRRect(
@@ -299,7 +285,6 @@ class _ModernFieldCard extends StatelessWidget {
                             ),
                     ),
                   ),
-                  // Rating Badge
                   Positioned(
                     top: 12,
                     right: 12,
@@ -325,13 +310,11 @@ class _ModernFieldCard extends StatelessWidget {
                 ],
               ),
 
-              // 2. Detail Informasi
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama Field
                     Text(
                       field.name,
                       style: theme.textTheme.titleLarge?.copyWith(
@@ -343,7 +326,6 @@ class _ModernFieldCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     
-                    // Alamat
                     Row(
                       children: [
                         Icon(Icons.location_on_outlined, 
@@ -367,7 +349,6 @@ class _ModernFieldCard extends StatelessWidget {
                     Divider(height: 1, color: theme.dividerColor),
                     const SizedBox(height: 12),
                     
-                    // Harga & Tombol
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,

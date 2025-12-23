@@ -22,8 +22,6 @@ class FieldRepository {
   FieldRepository(this._client);
 
   Future<void> deleteField(String id) async {
-  // Update status menjadi tidak aktif (false)
-  // Pastikan kolom is_active ada di database
   await _client.from('fields').update({'is_active': false}).eq('id', id);
 }
 
@@ -55,7 +53,7 @@ class FieldRepository {
   Future<void> addField(FieldModel field) async {
     await _client.from('fields').insert({
       ...field.toJson(),
-      'id': field.id, // <--- TAMBAHKAN BARIS INI (PENTING!)
+      'id': field.id, 
       'owner_id': _client.auth.currentUser!.id,
     });
   }

@@ -21,16 +21,13 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
   Widget build(BuildContext context) {
     final fieldsAsync = ref.watch(allFieldsProvider);
     final theme = Theme.of(context);
-    // Kita tidak butuh isDarkMode lagi untuk URL tile, karena OSM warnanya tetap sama
 
     return Scaffold(
-      // extendBodyBehindAppBar agar peta fullscreen sampai ke belakang status bar
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Field Locations'),
         backgroundColor: Colors.transparent, 
         elevation: 0,
-        // Gradient agar tombol back & title tetap terbaca di atas peta
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -48,15 +45,13 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
       ),
       body: fieldsAsync.when(
         data: (fields) {
-          // 1. Ambil hanya field yang punya koordinat valid
           final validFields = fields
               .where((f) => f.lat != null && f.lng != null)
               .toList();
 
-          // 2. Tentukan titik tengah awal
           final initialCenter = validFields.isNotEmpty
               ? LatLng(validFields.first.lat!, validFields.first.lng!)
-              : const LatLng(-7.2575, 112.7521); // Default: Surabaya
+              : const LatLng(-7.2575, 112.7521); 
 
           return Stack(
             children: [
@@ -70,15 +65,11 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
                   ),
                 ),
                 children: [
-                  // --- PERUBAHAN DI SINI (Ganti TileLayer) ---
                   TileLayer(
-                    // URL Standar OpenStreetMap (Berwarna)
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    // Wajib diisi sesuai policy OSM
                     userAgentPackageName: 'com.sewalapangan.app', 
                   ),
 
-                  // Layer Marker (Pin Lokasi)
                   MarkerLayer(
                     markers: validFields.map((field) {
                       return Marker(
@@ -91,7 +82,6 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
                             _showFieldPreview(context, field);
                             _mapController.move(LatLng(field.lat!, field.lng!), 15);
                           },
-                          // Marker tetap menggunakan logic dark mode agar iconnya kontras jika user ganti tema HP
                           child: _CustomMarker(isDarkMode: theme.brightness == Brightness.dark),
                         ),
                       );
@@ -100,7 +90,6 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
                 ],
               ),
               
-              // Widget "My Location"
               Positioned(
                 bottom: 30,
                 right: 20,
@@ -128,7 +117,6 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
     );
   }
 
-  // Fungsi memunculkan Bottom Sheet Preview
   void _showFieldPreview(BuildContext context, FieldModel field) {
     showModalBottomSheet(
       context: context,
@@ -139,7 +127,6 @@ class _FieldsMapScreenState extends ConsumerState<FieldsMapScreen> {
   }
 }
 
-// --- WIDGET PENDUKUNG ---
 
 class _CustomMarker extends StatelessWidget {
   final bool isDarkMode;
@@ -226,7 +213,6 @@ class _FieldPreviewCard extends StatelessWidget {
             ),
           ),
 
-          // Info
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(

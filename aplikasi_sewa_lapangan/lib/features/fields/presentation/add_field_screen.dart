@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_model.dart';
 import 'package:aplikasi_sewa_lapangan/features/fields/data/field_repository.dart';
-// IMPORT INI PENTING (Pastikan path file location_picker_screen benar)
 import 'package:aplikasi_sewa_lapangan/features/fields/presentation/location_picker_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:latlong2/latlong.dart'; // Pastikan package latlong2 ada
+import 'package:latlong2/latlong.dart'; 
 import 'dart:typed_data';
 
 class AddFieldScreen extends ConsumerStatefulWidget {
@@ -28,7 +27,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
   late final TextEditingController _priceController;
   late final TextEditingController _addressController;
   
-  // Coordinate Controllers (Bisa Decimal atau DMS)
+  // Coordinate Controllers 
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _lngController = TextEditingController();
 
@@ -59,7 +58,6 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
     if (f != null) {
       if (f.lat != null) _latController.text = f.lat.toString();
       if (f.lng != null) _lngController.text = f.lng.toString();
-      // Load fasilitas yang sudah ada (jika edit mode)
       _selectedFacilities = List.from(f.facilities); 
     }
     
@@ -96,22 +94,18 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
 
     if (result != null) {
       setState(() {
-        // Isi Controller dengan Decimal
         _latController.text = result.latitude.toString();
         _lngController.text = result.longitude.toString();
       });
     }
   }
 
-  // --- LOGIC PARSE KOORDINAT (Cerdas) ---
   double? _parseCoordinate(String input) {
     if (input.isEmpty) return null;
     
-    // 1. Coba parse Decimal (-7.25)
     final decimal = double.tryParse(input);
     if (decimal != null) return decimal;
 
-    // 2. Coba parse DMS (7°16'45"S)
     try {
       final regex = RegExp(r'''(\d+)[°\s]+(\d+)['\s]+(\d+(?:\.\d+)?)["\s]*([NSEW])''', caseSensitive: false);
       final match = regex.firstMatch(input.trim());
@@ -152,7 +146,6 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
       return;
     }
 
-    // Parse lat/lng
     double? finalLat = _parseCoordinate(_latController.text);
     double? finalLng = _parseCoordinate(_lngController.text);
 
@@ -237,7 +230,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
   Widget build(BuildContext context) {
     final isEdit = widget.field != null;
     final theme = Theme.of(context);
-    final isDarkMode = true; // Hardcoded sesuai request sebelumnya
+    final isDarkMode = true; 
     
     final cardColor = theme.cardColor;
     final inputFillColor = isDarkMode ? theme.scaffoldBackgroundColor : Colors.grey.shade50;
@@ -293,14 +286,11 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                     : (isEdit && widget.field!.images.isNotEmpty)
                         ? DecorationImage(
                             image: NetworkImage(
-                              // --- PERBAIKAN LOGIC DI SINI ---
-                              // Cek dulu: apakah string gambar sudah ada 'http'-nya?
                               widget.field!.images.first.contains('http')
-                                  ? widget.field!.images.first // Jika ya, pakai langsung
+                                  ? widget.field!.images.first 
                                   : Supabase.instance.client.storage
                                       .from('field-images')
-                                      .getPublicUrl(widget.field!.images.first), // Jika tidak, baru generate URL
-                              // -------------------------------
+                                      .getPublicUrl(widget.field!.images.first), 
                             ),
                             fit: BoxFit.cover,
                           )
@@ -381,7 +371,7 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                       activeColor: theme.primaryColor,
                       checkColor: Colors.white,
                       contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading, // Checkbox di kiri
+                      controlAffinity: ListTileControlAffinity.leading, 
                       onChanged: (val) => _toggleFacility(facility, val),
                     );
                   }).toList(),
@@ -413,7 +403,6 @@ class _AddFieldScreenState extends ConsumerState<AddFieldScreen> {
                     ),
                     const SizedBox(height: 20),
                     
-                    // Header Coordinates + Button Map
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
